@@ -14,5 +14,9 @@ This project is meant to explain practically the following filters:
 
 ## Proof of Concept
 
-Here's a video demonstration the functionalites of those filters practically:
+Here's a video demonstration of the functionalities of those filters practically:
+
+
+
+[](https://github.com/MrBomber0x001/image-processing-final/assets/42917814/3b40f1bd-6c77-471c-a877-0852862d6929)
 
