@@ -34,7 +34,7 @@ class ImageFilterApp:
             "Gaussian Blur": self.apply_gaussian,
             "Median Blur": self.apply_median,
             "Sobel": self.apply_sobel_edge_detector,
-            "Perwitt": self.apply_prewitt_edge_detector,
+            "Prewitt": self.apply_prewitt_edge_detector,
             "Erosion": self.apply_erosion,
             "Hough Circles": self.apply_hough_circles,
             "Dilation": self.apply_dilation,
@@ -122,81 +122,101 @@ class ImageFilterApp:
             self.display_image(self.filtered_image, self.canvas_filtered)
 
     def apply_blur(self, kernel_size):
+        """
+        Apply a simple blur filter to the image.
+        The blur filter averages pixels over a kernel of the given size.
+        """
         return cv2.blur(self.original_image, (kernel_size, kernel_size))
 
     def apply_gaussian(self, kernel_size):
+        """
+        Apply a Gaussian blur filter to the image.
+        This filter uses a Gaussian kernel to smooth the image.
+        """
         return cv2.GaussianBlur(self.original_image, (kernel_size, kernel_size), 0)
 
     def apply_median(self, kernel_size):
+        """
+        Apply a median blur filter to the image.
+        This filter replaces each pixel's value with the median value of the pixels in the kernel.
+        """
         return cv2.medianBlur(self.original_image, kernel_size)
     
     def apply_hpf(self, kernel_size):
-        # Convert the original image to grayscale
+        """
+        Apply a high-pass filter to the image.
+        This filter highlights edges and fine details by subtracting a Gaussian blurred image from the original.
+        """
         gray_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
-        # Apply Gaussian blur to the grayscale image with the selected kernel size
         blurred_image = cv2.GaussianBlur(gray_image, (kernel_size, kernel_size), 0)
-        # Subtract the blurred image from the grayscale image to obtain high-pass filtered image
         hpf_image = cv2.subtract(gray_image, blurred_image)
-        # Convert the high-pass filtered image to BGR format and update the image display
         return cv2.cvtColor(hpf_image, cv2.COLOR_GRAY2BGR)
     
     def apply_sobel_edge_detector(self, kernel_size):
-        # Convert the original image to grayscale
+        """
+        Apply a Sobel edge detection filter to the image.
+        The Sobel filter calculates the gradient of the image intensity at each pixel.
+        """
         gray_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
-        # Compute the horizontal and vertical gradients using Sobel operators
         sobel_x = cv2.Sobel(gray_image, cv2.CV_64F, 1, 0, ksize=kernel_size)
         sobel_y = cv2.Sobel(gray_image, cv2.CV_64F, 0, 1, ksize=kernel_size)
-        # Compute the magnitude of gradients
         sobel_image = np.sqrt(sobel_x**2 + sobel_y**2)
-        # Normalize the gradient magnitude image
         return cv2.normalize(sobel_image, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     
     def apply_prewitt_edge_detector(self, kernel_size):
-        # Convert the original image to grayscale
+        """
+        Apply a Prewitt edge detection filter to the image.
+        The Prewitt filter is similar to the Sobel filter but uses simpler convolution kernels.
+        """
         gray_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
-        # Compute the horizontal and vertical gradients using Prewitt operators
         prewitt_x = cv2.Sobel(gray_image, cv2.CV_64F, 1, 0, ksize=kernel_size)
-        prewitt_y = cv2.Sobel(gray_image, cv2.CV_64F, 0, 1, ksize=kernel_size)
-        # Compute the magnitude of gradients
+        prewitt_y = cv2.Sobel(gray_image, cv2.CV_64F, 0, 1,
+        gray_image, cv2.CV_64F, 0, 1, ksize=kernel_size)
         prewitt_image = np.sqrt(prewitt_x**2 + prewitt_y**2)
-        # Normalize the
-        # Normalize the gradient magnitude image
         return cv2.normalize(prewitt_image, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
     def apply_erosion(self, kernel_size):
-        # Create a kernel for erosion
+        """
+        Apply an erosion filter to the image.
+        The erosion filter erodes the boundaries of the foreground object.
+        """
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
-        # Perform erosion on the original image
         return cv2.erode(self.original_image, kernel, iterations=1)
 
     def apply_hough_circles(self):
+        """
+        Apply Hough Circle detection to the image.
+        This filter detects circles in the image using the Hough Circle Transform algorithm.
+        """
         gray_img = cv2.cvtColor(self.original_image, cv2.COLOR_RGB2GRAY)
         gray_img = cv2.medianBlur(gray_img, 5)
         dp = self.dp_var.get()
         min_dist = self.min_dist_var.get()
         param1 = self.param1_var.get()
         param2 = self.param2_var.get()
-        # dp is the inverse ratio of the accumulator resolution to the image resolution
         circles = cv2.HoughCircles(gray_img, cv2.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=0, maxRadius=0)
         result_img = self.original_image.copy()
 
         if circles is not None:
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
-                # Draw the outer circle
                 cv2.circle(result_img, (i[0], i[1]), i[2], (0, 255, 0), 2)
-                # Draw the center of the circle
                 cv2.circle(result_img, (i[0], i[1]), 2, (0, 0, 255), 3)
 
         return result_img
 
     def apply_dilation(self, kernel_size):
-        # Create a kernel for dilation
+        """
+        Apply a dilation filter to the image.
+        The dilation filter increases the object area and is used to accentuate features.
+        """
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
-        # Perform dilation on the original image
         return cv2.dilate(self.original_image, kernel, iterations=1)
 
     def display_image(self, img, canvas):
+        """
+        Display an image on a specified Tkinter canvas.
+        """
         img_pil = Image.fromarray(img)
         img_tk = ImageTk.PhotoImage(img_pil)
         canvas.create_image(0, 0, anchor=tk.NW, image=img_tk)
