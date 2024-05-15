@@ -23,8 +23,6 @@ class ImageFilterApp:
         self.original_image = None
         self.filtered_image = None
 
-
-        
         # Initialize Hough Circle parameters
         self.dp_var = DoubleVar(value=1.2)
         self.min_dist_var = IntVar(value=20)
@@ -54,12 +52,12 @@ class ImageFilterApp:
         frame_control.pack(side=tk.BOTTOM, fill=tk.X)
 
         # Canvas for original and filtered images
-        # Canvas for original and filtered images
         self.canvas_original = tk.Canvas(frame_image, width=600, height=600, bg='white', highlightthickness=1, highlightbackground="#4CAF50")
         self.canvas_original.grid(row=0, column=0, padx=10, pady=10)
 
         self.canvas_filtered = tk.Canvas(frame_image, width=600, height=600, bg='white', highlightthickness=1, highlightbackground="#4CAF50")
         self.canvas_filtered.grid(row=0, column=1, padx=10, pady=10)
+
         # Control panel
         ttk.Button(frame_control, text="Upload Image", command=self.upload_image).grid(row=0, column=0, padx=10, pady=10)
 
@@ -79,18 +77,22 @@ class ImageFilterApp:
         self.frame_hough.grid(row=1, column=0, columnspan=5, pady=10)
 
         ttk.Label(self.frame_hough, text="dp:").grid(row=0, column=0, padx=5)
-        tk.Entry(self.frame_hough, textvariable=self.dp_var, width=5).grid(row=0, column=1, padx=5)
+        self.dp_slider = Scale(self.frame_hough, from_=1.0, to=3.0, resolution=0.1, orient=HORIZONTAL, variable=self.dp_var, command=self.update_filter)
+        self.dp_slider.grid(row=0, column=1, padx=5)
 
         ttk.Label(self.frame_hough, text="minDist:").grid(row=0, column=2, padx=5)
-        tk.Entry(self.frame_hough, textvariable=self.min_dist_var, width=5).grid(row=0, column=3, padx=5)
+        self.min_dist_slider = Scale(self.frame_hough, from_=1, to=100, orient=HORIZONTAL, variable=self.min_dist_var, command=self.update_filter)
+        self.min_dist_slider.grid(row=0, column=3, padx=5)
 
         ttk.Label(self.frame_hough, text="param1:").grid(row=0, column=4, padx=5)
-        tk.Entry(self.frame_hough, textvariable=self.param1_var, width=5).grid(row=0, column=5, padx=5)
+        self.param1_slider = Scale(self.frame_hough, from_=1, to=100, orient=HORIZONTAL, variable=self.param1_var, command=self.update_filter)
+        self.param1_slider.grid(row=0, column=5, padx=5)
 
         ttk.Label(self.frame_hough, text="param2:").grid(row=0, column=6, padx=5)
-        tk.Entry(self.frame_hough, textvariable=self.param2_var, width=5).grid(row=0, column=7, padx=5)
+        self.param2_slider = Scale(self.frame_hough, from_=1, to=100, orient=HORIZONTAL, variable=self.param2_var, command=self.update_filter)
+        self.param2_slider.grid(row=0, column=7, padx=5)
 
-        self.frame_hough.grid_remove()  # H
+        self.frame_hough.grid_remove()
 
     def toggle_hough_controls(self, event=None):
         selected_filter = self.filter_combo.get()
@@ -138,7 +140,6 @@ class ImageFilterApp:
         # Convert the high-pass filtered image to BGR format and update the image display
         return cv2.cvtColor(hpf_image, cv2.COLOR_GRAY2BGR)
     
-    
     def apply_sobel_edge_detector(self, kernel_size):
         # Convert the original image to grayscale
         gray_image = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
@@ -158,16 +159,16 @@ class ImageFilterApp:
         prewitt_y = cv2.Sobel(gray_image, cv2.CV_64F, 0, 1, ksize=kernel_size)
         # Compute the magnitude of gradients
         prewitt_image = np.sqrt(prewitt_x**2 + prewitt_y**2)
+        # Normalize the
         # Normalize the gradient magnitude image
         return cv2.normalize(prewitt_image, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        # Update the image display with the Prewitt edge detected image
-        
+
     def apply_erosion(self, kernel_size):
         # Create a kernel for erosion
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
         # Perform erosion on the original image
         return cv2.erode(self.original_image, kernel, iterations=1)
-    
+
     def apply_hough_circles(self):
         gray_img = cv2.cvtColor(self.original_image, cv2.COLOR_RGB2GRAY)
         gray_img = cv2.medianBlur(gray_img, 5)
@@ -175,7 +176,7 @@ class ImageFilterApp:
         min_dist = self.min_dist_var.get()
         param1 = self.param1_var.get()
         param2 = self.param2_var.get()
-
+        # dp is the inverse ratio of the accumulator resolution to the image resolution
         circles = cv2.HoughCircles(gray_img, cv2.HOUGH_GRADIENT, dp, min_dist, param1=param1, param2=param2, minRadius=0, maxRadius=0)
         result_img = self.original_image.copy()
 
@@ -188,14 +189,12 @@ class ImageFilterApp:
                 cv2.circle(result_img, (i[0], i[1]), 2, (0, 0, 255), 3)
 
         return result_img
-    
+
     def apply_dilation(self, kernel_size):
         # Create a kernel for dilation
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
         # Perform dilation on the original image
         return cv2.dilate(self.original_image, kernel, iterations=1)
-
-
 
     def display_image(self, img, canvas):
         img_pil = Image.fromarray(img)
