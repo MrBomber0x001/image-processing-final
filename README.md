@@ -15,4 +15,4 @@ This project is meant to explain practically the following filters:
 ## Proof of Concept
 
 Here's a video demonstration the functionalites of those filters practically:
-<video src="./image-processing-poc.mkv"></video>
+
